@@ -1,0 +1,12 @@
+.env
+backend/.env
+**/.venv/
+__pycache__/
+*.pyc
+backend/data/*.db
+backend/uploads/*
+!backend/uploads/.gitkeep
+!backend/data/.gitkeep
+eval/reports/*.json
+.DS_Store
+Thumbs.db

@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 导游安全靶场 Lab</title>
+  <style>
+    :root {
+      --bg: #0c1222;
+      --bg-card: #151d2e;
+      --bg-input: #0a0f1a;
+      --border: rgba(148, 163, 184, 0.15);
+      --text: #e8edf5;
+      --muted: #8b9cb3;
+      --accent: #5eead4;
+      --accent-dim: rgba(94, 234, 212, 0.12);
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --danger: #f87171;
+      --radius: 14px;
+      --shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+      background: var(--bg);
+      background-image:
+        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(59, 130, 246, 0.18), transparent),
+        radial-gradient(ellipse 60% 40% at 100% 0%, rgba(94, 234, 212, 0.08), transparent);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+    .wrap { max-width: 1180px; margin: 0 auto; padding: 1.5rem 1.25rem 2.5rem; }
+    .hero {
+      margin-bottom: 1.5rem;
+      padding: 1.25rem 1.5rem;
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(94, 234, 212, 0.06));
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .hero h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      margin-bottom: 0.35rem;
+    }
+    .hero .sub { color: var(--muted); font-size: 0.9rem; }
+    .badges { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
+    .badge {
+      font-size: 0.72rem;
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+      background: var(--accent-dim);
+      color: var(--accent);
+      border: 1px solid rgba(94, 234, 212, 0.25);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+    }
+    @media (max-width: 920px) { .grid { grid-template-columns: 1fr; } }
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      min-height: 420px;
+    }
+    .card-head {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .card-head .icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      background: var(--accent-dim);
+    }
+    .card h2 { font-size: 1.05rem; font-weight: 600; color: var(--text); }
+    .field { margin-bottom: 0.85rem; }
+    label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--muted);
+      margin-bottom: 0.35rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 0.55rem 0.75rem;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--bg-input);
+      color: var(--text);
+      font-size: 0.9rem;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: rgba(59, 130, 246, 0.5);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    }
+    textarea { resize: vertical; min-height: 72px; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.55rem 1rem;
+      border-radius: 10px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.1s, background 0.15s;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn-primary {
+      width: 100%;
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      color: #fff;
+      margin-bottom: 0.75rem;
+    }
+    .btn-primary:hover { filter: brightness(1.08); }
+    .btn-ghost {
+      background: rgba(148, 163, 184, 0.1);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { background: rgba(148, 163, 184, 0.18); }
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+    .btn-row .btn { flex: 1; min-width: 100px; }
+    .hint {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 0.75rem;
+      line-height: 1.45;
+    }
+    .link {
+      font-size: 0.82rem;
+      color: var(--accent);
+      text-decoration: none;
+      margin-bottom: 0.75rem;
+      display: inline-block;
+    }
+    .link:hover { text-decoration: underline; }
+    .log {
+      flex: 1;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.85rem;
+      min-height: 140px;
+      max-height: 260px;
+      overflow: auto;
+      font-family: "Cascadia Code", "Consolas", monospace;
+      font-size: 0.8rem;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      color: #b8c5d6;
+    }
+    .status-pill {
+      display: inline-block;
+      font-size: 0.8rem;
+      padding: 0.35rem 0.65rem;
+      border-radius: 8px;
+      background: rgba(34, 197, 94, 0.12);
+      color: #86efac;
+      border: 1px solid rgba(34, 197, 94, 0.25);
+      margin-bottom: 0.75rem;
+    }
+    .eval-card { min-height: 380px; }
+    .eval-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+    @media (max-width: 520px) { .eval-row { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="hero">
+      <h1>AI 导游安全靶场</h1>
+      <p class="sub">景区 RAG 应用 · 投毒与间接注入评测 · baseline / hardened 对比实验</p>
+      <div class="badges">
+        <span class="badge">RAG 投毒</span>
+        <span class="badge">间接提示注入</span>
+        <span class="badge">ASR 自动化</span>
+        <span class="badge">SQLite 全量日志</span>
+      </div>
+    </header>
+
+    <div class="grid">
+      <section class="card">
+        <div class="card-head">
+          <div class="icon">💬</div>
+          <h2>游客问答</h2>
+        </div>
+        <div class="field">
+          <label>安全模式</label>
+          <select id="chatMode">
+            <option value="baseline">baseline（脆弱基线）</option>
+            <option value="rag_poison_vuln">rag_poison_vuln（脆弱检索）</option>
+            <option value="hardened">hardened（加固）</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>问题</label>
+          <textarea id="question" rows="3">灵山大佛有多高？</textarea>
+        </div>
+        <button type="button" class="btn btn-primary" id="askBtn">发送提问</button>
+        <div class="log" id="chatLog">等待提问…</div>
+      </section>
+
+      <section class="card">
+        <div class="card-head">
+          <div class="icon">⚙️</div>
+          <h2>Lab 控制台</h2>
+        </div>
+        <div id="labStatus" class="status-pill">连接中…</div>
+        <div class="field">
+          <label>Lab Token</label>
+          <input id="labToken" type="password" placeholder="与 backend/.env 中 LAB_ADMIN_TOKEN 一致" />
+        </div>
+        <div class="field">
+          <label>全局模式</label>
+          <select id="globalMode">
+            <option value="baseline">baseline</option>
+            <option value="rag_poison_vuln">rag_poison_vuln</option>
+            <option value="hardened">hardened</option>
+          </select>
+        </div>
+        <div class="btn-row">
+          <button type="button" class="btn btn-ghost" id="setModeBtn">应用模式</button>
+          <button type="button" class="btn btn-ghost" id="seedBtn">重置知识库</button>
+          <button type="button" class="btn btn-ghost" id="retrieveBtn">检索预览</button>
+        </div>
+        <div class="log" id="labLog">操作日志将显示在这里…</div>
+      </section>
+
+      <section class="card">
+        <div class="card-head">
+          <div class="icon">📊</div>
+          <h2>后台统计</h2>
+        </div>
+        <div class="btn-row">
+          <button type="button" class="btn btn-ghost" id="statsBtn">刷新总览</button>
+          <button type="button" class="btn btn-ghost" id="statsBaselineBtn">baseline</button>
+          <button type="button" class="btn btn-ghost" id="statsHardenedBtn">hardened</button>
+        </div>
+        <a class="link" href="/api/v1/logs/export" target="_blank" rel="noopener">↓ 导出全部对话 JSON</a>
+        <div class="log" id="statsLog">点击上方按钮查看统计…</div>
+      </section>
+
+      <section class="card eval-card">
+        <div class="card-head">
+          <div class="icon">🧪</div>
+          <h2>自动化评测</h2>
+        </div>
+        <div class="eval-row">
+          <div class="field" style="margin-bottom:0">
+            <label>数据集</label>
+            <select id="dataset">
+              <option value="all">all（全部）</option>
+              <option value="benign_qa">benign_qa</option>
+              <option value="indirect_injection">indirect_injection</option>
+              <option value="rag_poison">rag_poison</option>
+            </select>
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <label>评测模式</label>
+            <select id="evalMode">
+              <option value="baseline">baseline</option>
+              <option value="rag_poison_vuln">rag_poison_vuln</option>
+              <option value="hardened">hardened</option>
+            </select>
+          </div>
+        </div>
+        <button type="button" class="btn btn-primary" id="evalBtn" style="margin-top:0.85rem">运行评测</button>
+        <div class="log" id="evalLog">ASR / 误杀率结果将显示在这里…</div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const API = location.origin + "/api/v1";
+
+    function log(el, text) {
+      el.textContent = typeof text === "string" ? text : JSON.stringify(text, null, 2);
+    }
+
+    async function api(path, opts = {}) {
+      const res = await fetch(API + path, {
+        headers: { "Content-Type": "application/json", ...(opts.headers || {}) },
+        ...opts,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || data.message || res.statusText);
+      return data;
+    }
+
+    document.getElementById("askBtn").onclick = async () => {
+      const chatLog = document.getElementById("chatLog");
+      chatLog.textContent = "请求中…";
+      try {
+        const r = await api("/chat/ask", {
+          method: "POST",
+          body: JSON.stringify({
+            user_id: "web-guest",
+            question: document.getElementById("question").value,
+            mode: document.getElementById("chatMode").value,
+          }),
+        });
+        const d = r.data;
+        let txt = `【${d.lab_mode}】\n${d.answer}\n\n── 检索命中 ──\n`;
+        d.retrieved.forEach((x) => {
+          txt += `${x.is_poison ? "☠ " : "✓ "}${x.title}  score=${x.score}\n`;
+        });
+        log(chatLog, txt);
+      } catch (e) {
+        log(chatLog, "错误: " + e.message);
+      }
+    };
+
+    document.getElementById("setModeBtn").onclick = async () => {
+      const labLog = document.getElementById("labLog");
+      try {
+        const r = await api("/lab/mode", {
+          method: "POST",
+          headers: { "X-Lab-Token": document.getElementById("labToken").value },
+          body: JSON.stringify({ mode: document.getElementById("globalMode").value }),
+        });
+        log(labLog, r.message);
+        refreshStatus();
+      } catch (e) {
+        log(labLog, "错误: " + e.message);
+      }
+    };
+
+    document.getElementById("seedBtn").onclick = async () => {
+      const labLog = document.getElementById("labLog");
+      try {
+        const r = await api("/lab/seed?reset=true", {
+          method: "POST",
+          headers: { "X-Lab-Token": document.getElementById("labToken").value },
+        });
+        log(labLog, r.data);
+      } catch (e) {
+        log(labLog, "错误: " + e.message);
+      }
+    };
+
+    document.getElementById("retrieveBtn").onclick = async () => {
+      const labLog = document.getElementById("labLog");
+      try {
+        const r = await api("/lab/retrieve", {
+          method: "POST",
+          body: JSON.stringify({
+            question: document.getElementById("question").value,
+            mode: document.getElementById("chatMode").value,
+          }),
+        });
+        log(labLog, r.data);
+      } catch (e) {
+        log(labLog, "错误: " + e.message);
+      }
+    };
+
+    document.getElementById("evalBtn").onclick = async () => {
+      const evalLog = document.getElementById("evalLog");
+      const btn = document.getElementById("evalBtn");
+      btn.disabled = true;
+      evalLog.textContent = "评测运行中，请稍候（约 1～2 分钟）…";
+      try {
+        const r = await api("/eval/run", {
+          method: "POST",
+          body: JSON.stringify({
+            dataset: document.getElementById("dataset").value,
+            mode: document.getElementById("evalMode").value,
+          }),
+        });
+        const d = r.data;
+        log(
+          evalLog,
+          `run_id: ${d.run_id}\n\n` +
+            `ASR: ${(d.asr * 100).toFixed(1)}%  (${d.attack_success}/${d.attack_cases})\n` +
+            `误杀率: ${(d.false_refusal_rate * 100).toFixed(1)}%  (${d.false_refusal}/${d.benign_cases})\n\n` +
+            d.results.map((x) => `[${x.id}] 成功=${x.attack_success}  投毒命中=${x.retrieved_poison}\nQ: ${x.question}\nA: ${x.answer.slice(0, 100)}…`).join("\n\n")
+        );
+      } catch (e) {
+        log(evalLog, "错误: " + e.message);
+      } finally {
+        btn.disabled = false;
+      }
+    };
+
+    document.getElementById("statsBtn").onclick = async () => {
+      const el = document.getElementById("statsLog");
+      el.textContent = "加载中…";
+      try {
+        const r = await api("/stats/overview");
+        log(el, r.data);
+      } catch (e) {
+        log(el, "错误: " + e.message);
+      }
+    };
+    document.getElementById("statsBaselineBtn").onclick = async () => {
+      const el = document.getElementById("statsLog");
+      try {
+        const r = await api("/stats/summary?lab_mode=baseline");
+        log(el, r.data);
+      } catch (e) {
+        log(el, "错误: " + e.message);
+      }
+    };
+    document.getElementById("statsHardenedBtn").onclick = async () => {
+      const el = document.getElementById("statsLog");
+      try {
+        const r = await api("/stats/summary?lab_mode=hardened");
+        log(el, r.data);
+      } catch (e) {
+        log(el, "错误: " + e.message);
+      }
+    };
+
+    function refreshStatus() {
+      api("/lab/mode").then((r) => {
+        const d = r.data;
+        document.getElementById("labStatus").textContent =
+          `LLM ${d.llm_configured ? "已连接" : "Mock"} · 当前模式 ${d.lab_mode}`;
+        document.getElementById("globalMode").value = d.lab_mode;
+      }).catch(() => {
+        document.getElementById("labStatus").textContent = "无法连接后端";
+        document.getElementById("labStatus").style.background = "rgba(248,113,113,0.12)";
+        document.getElementById("labStatus").style.color = "#fca5a5";
+      });
+    }
+    refreshStatus();
+  </script>
+</body>
+</html>
